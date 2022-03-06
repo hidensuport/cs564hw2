@@ -325,6 +325,25 @@ class BTreeIndex {
 	~BTreeIndex();
 
 
+
+
+
+
+
+
+
+  const void searchLeafPageWithKey(const void *key, PageId& pid, PageId currentPageId, std::vector<PageId>& searchPath);
+
+  const void insertNonLeafNode(PageId pid, const void *key, const PageId leftPageId, std::vector<PageId> searchPath, bool fromLeaf);
+
+  const void splitNonLeafNode(PageId pid, const void *key, const PageId leftPageId, std::vector<PageId>& searchPath, bool fromLeaf);
+
+  const void insertLeafNode(const PageId pid, const void *key, const RecordId rid, std::vector<PageId>& searchPath);
+
+  const void splitLeafNode(PageId pid, const void *key, const RecordId rid, std::vector<PageId>& searchPath);
+
+  const void createAndInsertNewRoot(const void *key, const PageId leftPageId, const PageId rightPageId, int level);
+  
   /**
 	 * Insert a new entry using the pair <value,rid>. 
 	 * Start from root to recursively find out the leaf to insert the entry in. The insertion may cause splitting of leaf node.
