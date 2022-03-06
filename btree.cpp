@@ -22,9 +22,6 @@
 namespace badgerdb
 {
 
-// -----------------------------------------------------------------------------
-// BTreeIndex::BTreeIndex -- Constructor
-// -----------------------------------------------------------------------------
 
 BTreeIndex::BTreeIndex(const std::string & relationName,
 		std::string & outIndexName,
@@ -183,7 +180,7 @@ BTreeIndex::~BTreeIndex()
 
 
 
-  const void BTreeIndex::searchLeafPageWithKey(const void *key, PageId & pid, PageId currentPageId, std::vector<PageId> & searchPath){
+   void BTreeIndex::searchThroughLeaf(const void *key, PageId & pid, PageId currentPageId, std::vector<PageId> & searchPath){
     Page * currPage;
     this->bufMgr->readPage(this -> file, currentPageId, currPage);
     NonLeafNodeInt * currNode = (NonLeafNodeInt *) currPage;
@@ -200,7 +197,8 @@ BTreeIndex::~BTreeIndex()
         }
     }
     PageId updateCurrPageNum = currNode -> pageNoArray[targetIndex];
-    // check if the next lower level node is leaf node or not
+
+
     if(currNode -> level == 1){
         this -> bufMgr -> unPinPage(this -> file, currentPageId, false);
 
@@ -212,12 +210,12 @@ BTreeIndex::~BTreeIndex()
 
         this -> bufMgr -> unPinPage(this -> file, currentPageId, false);
         searchPath.push_back(currentPageId);
-        this -> searchLeafPageWithKey(key, pid, updateCurrPageNum, searchPath);
+        this -> searchThroughLeaf(key, pid, updateCurrPageNum, searchPath);
     }
 }
 
 
-  const void BTreeIndex::insertLeafNode(const PageId pid, const void *key, const RecordId rid, std::vector<PageId> & searchPath){
+   void BTreeIndex::insertLeafNode(const PageId pid, const void *key, const RecordId rid, std::vector<PageId> & searchPath){
     Page * currPage;
     this -> bufMgr -> readPage(this -> file, pid, currPage);
     LeafNodeInt * currLeafPage = (LeafNodeInt*) currPage;
@@ -240,21 +238,14 @@ BTreeIndex::~BTreeIndex()
                 currLeafPage -> keyArray[keySlots - i] = currLeafPage -> keyArray[keySlots - 1 - i];
                 currLeafPage -> ridArray[keySlots - i] = currLeafPage -> ridArray[keySlots - 1 - i];
             }
-            // the only case in the else is where the key value in
-            // the slot "currLeafPage -> slotTaken - 1 - i" is less than
-            // the key value of the target, since we assume that
-            // there is no duplication of key value.
-            // then we can store the new target pair into the slot
-            // "currLeafPage -> slotTaken - i"
+          
             else{
                 break;
             }
         }
         currLeafPage -> keyArray[keySlots - i] = *((int *) key);
         currLeafPage -> ridArray[keySlots - i] = rid;
-        // update the amount of slots being taken up in the leaf node
-	// currLeafPage -> slotTaken += 1;
-        // unpin this leaf index page
+      
         this -> bufMgr -> unPinPage(this -> file, pid, true);
         return;
     }
@@ -271,7 +262,7 @@ BTreeIndex::~BTreeIndex()
 
 
 
-  const void BTreeIndex::splitLeafNode(PageId pid, const void *key,  const RecordId rid, std::vector<PageId> & searchPath){
+   void BTreeIndex::splitLeafNode(PageId pid, const void *key,  const RecordId rid, std::vector<PageId> & searchPath){
     Page * currPage;
     this -> bufMgr -> readPage(this -> file, pid, currPage);
     LeafNodeInt * currLeafPage = (LeafNodeInt*) currPage;
@@ -321,7 +312,6 @@ BTreeIndex::~BTreeIndex()
                 if(i + 1 == this -> leafOccupancy){
                     currLeafPage -> keyArray[this -> leafOccupancy - 1 - i] = *((int*) key);
                     currLeafPage -> ridArray[this -> leafOccupancy - 1 - i] = rid;
-		    // currLeafPage -> slotTaken += 1;
                     newKeyInserted = true;
                 }
             }
@@ -332,7 +322,6 @@ BTreeIndex::~BTreeIndex()
                 if(newLeafKeySlots <  this -> leafOccupancy + 1 - threshold){
                     newLeafPage -> keyArray[this -> leafOccupancy + 1 - threshold - 1 - i] = *((int*)key);
                     newLeafPage -> ridArray[this -> leafOccupancy + 1 - threshold - 1 - i] = rid;
-                    //newLeafPage -> slotTaken += 1;
                     newKeyInserted = true;
                 }
                 else{
@@ -341,7 +330,6 @@ BTreeIndex::~BTreeIndex()
                     // the new key has to be put in the current leaf page
                     currLeafPage -> keyArray[this -> leafOccupancy - i] =  *((int*)key);
                     currLeafPage -> ridArray[this -> leafOccupancy - i] =  rid;
-		    // currLeafPage -> slotTaken += 1;
                     newKeyInserted = true;
                 }
             }
@@ -349,8 +337,7 @@ BTreeIndex::~BTreeIndex()
             if(newLeafKeySlots <  this -> leafOccupancy + 1 - threshold){
                 newLeafPage -> keyArray[this -> leafOccupancy + 1 - threshold - 2 - i] = currLeafPage -> keyArray[this -> leafOccupancy - i - 1];
                 newLeafPage -> ridArray[this -> leafOccupancy + 1 - threshold - 2 - i] = currLeafPage -> ridArray[this -> leafOccupancy - i - 1];
-                //newLeafPage -> slotTaken += 1;
-                //currLeafPage -> slotTaken -= 1;
+             
             }
             else{
                 
@@ -367,7 +354,7 @@ BTreeIndex::~BTreeIndex()
     if(searchPath.size() == 0){
         // case when this current page is a root. Then, we need to
         // create a new non-leaf root.
-        this -> createAndInsertNewRoot(&pushup, pid, newPageId, 1);
+        this -> formNewRoot(&pushup, pid, newPageId, 1);
     }
     else{
         // case when this current page is not a root.
@@ -386,13 +373,14 @@ BTreeIndex::~BTreeIndex()
 
 
 
-  const void BTreeIndex::createAndInsertNewRoot(const void *key, const PageId leftPageId, const PageId rightPageId, int level){
+   void BTreeIndex::formNewRoot(const void *key, const PageId leftPageId, const PageId rightPageId, int level){
     PageId rootId;
     Page * rootPage;
-    // allocate a page for the new non-leaf root
+
     this -> bufMgr -> allocPage(this -> file, rootId, rootPage);
     NonLeafNodeInt * nonLeafRootPage = (NonLeafNodeInt*) rootPage;
-    // initiate and update the var for this new non-leaf root
+
+
     nonLeafRootPage -> level = level;
     nonLeafRootPage -> keyArray[0]= *((int*) key);
     nonLeafRootPage -> pageNoArray[0] = leftPageId;
@@ -400,16 +388,15 @@ BTreeIndex::~BTreeIndex()
 
 
     
-    // nonLeafRootPage -> slotTaken += 1;
     this -> bufMgr -> unPinPage(this -> file, rootId, true);
-    // update the private var and the vars in the meta page
-    // this -> rootIsLeaf = false;
+
     this -> rootPageNum = rootId;
     Page * metaPage;
     this -> bufMgr -> readPage(this -> file, this -> headerPageNum, metaPage);
     IndexMetaInfo * metaInfo = (IndexMetaInfo*) metaPage;
     metaInfo -> rootPageNo = rootId;
     
+    metaInfo -> rootIsLeaf = false
     // unpin this meta page
     this -> bufMgr -> unPinPage(this -> file, this -> headerPageNum, true);
 }
@@ -421,13 +408,11 @@ BTreeIndex::~BTreeIndex()
 
 
 
-  const void BTreeIndex::insertNonLeafNode(PageId pid, const void *key, const PageId leftPageId, std::vector<PageId> searchPath, bool fromLeaf){
+   void BTreeIndex::insertInternalNode(PageId pid, const void *key, const PageId leftPageId, std::vector<PageId> searchPath, bool fromLeaf){
     Page * currPage;
     this -> bufMgr -> readPage(this -> file, pid, currPage);
     NonLeafNodeInt * currNonLeafPage = (NonLeafNodeInt*) currPage;
-    // check whether there is enough space to insert into this
-    // current non-leaf index page
-
+  
     int keySlotsOccupied = sizeof(currNonLeafPage -> keyArray)/sizeof(currNonLeafPage -> keyArray[0]);
     
     if(keySlotsOccupied < this -> nodeOccupancy){
@@ -435,9 +420,8 @@ BTreeIndex::~BTreeIndex()
         int i;
        
         currNonLeafPage -> pageNoArray[keySlotsOccupied + 1] =  currNonLeafPage -> pageNoArray[keySlotsOccupied];
-        for(i = 0; i <  keySlotsOccupied; ++i){
-            // shift all the slots with key value larger than this
-            // target key into the slots upper by 1.
+        for(i = 0; i <  keySlotsOccupied; i++){
+          
             if( currNonLeafPage -> keyArray[keySlotsOccupied - 1 - i] >  *((int *) key)){
                  currNonLeafPage -> keyArray[keySlotsOccupied - i] =  currNonLeafPage -> keyArray[keySlotsOccupied - 1 - i];
                  currNonLeafPage -> pageNoArray[keySlotsOccupied - i] =  currNonLeafPage -> pageNoArray[keySlotsOccupied - 1 - i];
@@ -452,26 +436,19 @@ BTreeIndex::~BTreeIndex()
          currNonLeafPage -> pageNoArray[keySlotsOccupied - i] = leftPageId;
         }
         else{
-            // if the new key is inserted from a leaf node, then the new
-            // pageId param is acutally the rightPageId
+           
             PageId CorrectLeftPageId = currNonLeafPage -> pageNoArray[keySlotsOccupied - i + 1];
             currNonLeafPage -> pageNoArray[keySlotsOccupied + 1] = leftPageId;
             currNonLeafPage -> keyArray[keySlotsOccupied - i] = *((int *) key);
             currNonLeafPage -> pageNoArray[keySlotsOccupied - i] = CorrectLeftPageId;
         }
-        // update the amount of slots being taken up in the
-        // leaf index page0
-        //  currNonLeafPage -> slotTaken += 1;
-        // unpin this non-leaf index page
+     
         this -> bufMgr -> unPinPage(this -> file, pid, true);
-        return;
+        return; 
     }
     else{
-        // this is the case where there is no more space to insert in
-        // a new (key, leftpageId) pair in this current non-leaf page
-        // unpin the current leaf page pinned in this function
+  
         this -> bufMgr -> unPinPage(this -> file, pid, false);
-        // we need to split this non-leaf page up into two parts
         this -> splitNonLeafNode(pid, key, leftPageId, searchPath, fromLeaf);
     }
 }
@@ -483,9 +460,8 @@ BTreeIndex::~BTreeIndex()
 
 
 
-  const void BTreeIndex::splitNonLeafNode(PageId pid, const void *key,  const PageId leftPageId, std::vector<PageId> & searchPath, bool fromLeaf){
-    // most part of this function should be similar to the splitLeafNode function. However, in this splitNonLeaf case, we don't copy,i.e. keep, the pushup value any more.
-    // TODO.
+   void BTreeIndex::splitInternalNode(PageId pid, const void *key,  const PageId leftPageId, std::vector<PageId> & searchPath, bool fromLeaf){
+    
     Page * currPage;
     this -> bufMgr -> readPage(this -> file, pid, currPage);
     NonLeafNodeInt * currNonLeafPage = (NonLeafNodeInt*) currPage;
@@ -509,7 +485,7 @@ BTreeIndex::~BTreeIndex()
     else{
         threshold = this -> nodeOccupancy / 2 + 1;
     }
-    for(int i= 0; i < this -> nodeOccupancy; ++i){
+    for(int i= 0; i < this -> nodeOccupancy; i++){
         if( currNonLeafPage -> keyArray[i] < *((int *)key)){
             if(newKeySlots < threshold){
                 newNonLeafPage -> keyArray[i] =  currNonLeafPage -> keyArray[i];
@@ -642,7 +618,7 @@ BTreeIndex::~BTreeIndex()
     if(searchPath.size() == 0){
         // case when this current page is a root. Then, we need to
         // create a new non-leaf root.
-        this -> createAndInsertNewRoot(&pushup, newPageId, pid, 0);
+        this -> formNewRoot(&pushup, newPageId, pid, 0);
         // since this is a non-leaf node, then the nodes above this one
         // must be at level = 0 for sure.
     }
@@ -682,14 +658,16 @@ void BTreeIndex::insertEntry(const void *key, const RecordId rid)
     
     if(metaInfo -> rootIsLeaf == true){
        
-        this -> insertLeafNode(this -> rootPageNum, key, rid, searchInPath);
-	this -> bufMgr -> unPinPage(file, rootPageNum, root);
+       this -> insertLeafNode(this -> rootPageNum, key, rid, searchInPath);
+	   this -> bufMgr -> unPinPage(file, rootPageNum, root);
     }
     else{
        
         PageId currPageId = Page::INVALID_NUMBER;
-        this -> searchLeafPageWithKey(key, currPageId, this -> rootPageNum, searchInPath);
+        this -> searchThroughLeaf(key, currPageId, this -> rootPageNum, searchInPath);
         // insert the (key, rid) pair into this potential leaf node
+
+
         this -> insertLeafNode(currPageId, key, rid, searchInPath);
 
 	this -> bufMgr -> unPinPage(file, rootPageNum, root);
