@@ -182,7 +182,7 @@ void test4()
     std::cout << "---------------------" << std::endl;
 	std::cout << "test for empty tree" << std::endl;
 	createZeroRelationForward();
-	indexTests();
+	intTestsEmpty();
 	deleteRelation();
 }
 void test5()
@@ -191,36 +191,20 @@ void test5()
   std::cout << "---------------------" << std::endl;
 	std::cout << "test for negative value" << std::endl;
 	createRelationForwardRange(-2000, 2000);
-	indexTests();
+	intTestsNegative();
 	deleteRelation(); 
 }
-void test5()
-{
-  // Test for have negative value
-  std::cout << "---------------------" << std::endl;
-	std::cout << "test for negative value" << std::endl;
-	createRelationForwardRange(-2000, 2000);
-	indexTests();
-	deleteRelation(); 
-}
+
 void test6()
 {
   // Test for have negative value
   std::cout << "---------------------" << std::endl;
 	std::cout << "test for out of boound" << std::endl;
 	createRelationForward();
-	indexTests();
+	intTestOutOfBounds();
 	deleteRelation();
 }
-void test7()
-{
-  // Test for have negative value
-  std::cout << "---------------------" << std::endl;
-	std::cout << "test for out of boound" << std::endl;
-	createRelationForward();
-	indexTests();
-	deleteRelation();
-}
+
 // -----------------------------------------------------------------------------
 // createRelationForward
 // -----------------------------------------------------------------------------
@@ -460,21 +444,7 @@ void indexTests()
   {
   }
 }
-void intTestOutOfBounds() {
-	if(testNum == 1){
-    std::cout << "Create a B+ Tree index on the integer field" << std::endl;
-  	BTreeIndex index(relationName, intIndexName, bufMgr, offsetof(tuple, i), INTEGER);
-  	checkPassFail(intScan(&index, -1000000, GT, 100000, LT), relationSize) 
-    try
-    {
-      std::cout << "try to remove: " << intIndexName << "\n";
-      File::remove(intIndexName);
-    }
-    catch (FileNotFoundException e)
-    {
-    }  
-  }
-}
+
   
 
 // -----------------------------------------------------------------------------
@@ -496,6 +466,45 @@ void intTests()
 	checkPassFail(intScan(&index,3000,GTE,4000,LT), 1000)
 }
 
+// test for empty tree
+void intTestsEmpty()
+{
+   std::cout << "Create a B+ Tree index on the integer field" << std::endl;
+  BTreeIndex index(relationName, intIndexName, bufMgr, offsetof(tuple,i), INTEGER);
+
+	// run some tests
+	checkPassFail(intScan(&index,25,GT,40,LT), 0)
+	checkPassFail(intScan(&index,20,GTE,35,LTE), 0)
+	checkPassFail(intScan(&index,-3,GT,3,LT), 0)
+	checkPassFail(intScan(&index,996,GT,1001,LT), 0)
+	checkPassFail(intScan(&index,0,GT,1,LT), 0)
+	checkPassFail(intScan(&index,300,GT,400,LT), 0)
+	checkPassFail(intScan(&index,3000,GTE,4000,LT), 0)
+  
+}
+
+// test for negtive value
+void intTestsNegative()
+{
+   std::cout << "Create a B+ Tree index on the integer field" << std::endl;
+  BTreeIndex index(relationName, intIndexName, bufMgr, offsetof(tuple,i), INTEGER);
+
+	// run some tests
+	checkPassFail(intScan(&index,25,GT,40,LT), 14)
+	checkPassFail(intScan(&index,20,GTE,35,LTE), 16)
+	checkPassFail(intScan(&index,-3,GT,3,LT), 5)
+	checkPassFail(intScan(&index,-1000,GT,1000,LT), 1999)
+	checkPassFail(intScan(&index,0,GT,1,LT), 0)
+	checkPassFail(intScan(&index,300,GT,400,LT), 99)
+	checkPassFail(intScan(&index,3000,GTE,4000,LT), 0)
+  
+}
+void intTestOutOfBounds() {
+  std::cout << "Create a B+ Tree index on the integer field" << std::endl;
+  BTreeIndex index(relationName, intIndexName, bufMgr, offsetof(tuple, i), INTEGER);
+
+  checkPassFail(intScan(&index, -1000000, GT, 100000, LT), relationSize) 
+}
 
 int intScan(BTreeIndex * index, int lowVal, Operator lowOp, int highVal, Operator highOp)
 {
