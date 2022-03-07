@@ -780,25 +780,25 @@ void BTreeIndex::startScan(const void* lowValParm,
 			}
 		}
 	}
-	while(currentNode->level != 1){ //Going through the tree and finding the correct node that is one level above the leaf node and marking every node it passes through to unPin later
-		std::cout << "Looped";
+	/*while(currentNode->level != 1){ //Going through the tree and finding the correct node that is one level above the leaf node and marking every node it passes through to unPin later
+        std::cout<<currentNode;
         if(lowOp == GT){
-			Page* newPage = NULL;
+            Page* newPage = NULL;
 			for(long unsigned int i = 0; i < sizeof(currentNode->keyArray) - 1; i++){
 				if(lowValInt < currentNode->keyArray[i]){
 					pagesAccessed.push_back(currentNode->pageNoArray[i]);
 					bufMgr->readPage(file, currentNode->pageNoArray[i], newPage);
-					currentNode = (NonLeafNodeInt*)(newPage);
+                    *currentNode = *(NonLeafNodeInt*)(newPage);
 				}
 				if(lowValInt > currentNode->keyArray[i] && lowValInt < currentNode->keyArray[i+1]){
 					pagesAccessed.push_back(currentNode->pageNoArray[i]);
 					bufMgr->readPage(file, currentNode->pageNoArray[i+1], newPage);
-					currentNode = (NonLeafNodeInt*)(newPage);
+                    *currentNode = *(NonLeafNodeInt*)(newPage);
 				}
 				if(lowValInt > currentNode->keyArray[i] && i == sizeof(currentNode->keyArray) - 1){
 					pagesAccessed.push_back(currentNode->pageNoArray[i]);
 					bufMgr->readPage(file, currentNode->pageNoArray[sizeof(currentNode->pageNoArray)-1], newPage);
-					currentNode = (NonLeafNodeInt*)(newPage);
+                    *currentNode = *(NonLeafNodeInt*)(newPage);
 				}
 			}
 		}
@@ -808,17 +808,17 @@ void BTreeIndex::startScan(const void* lowValParm,
 				if(lowValInt < currentNode->keyArray[i]){
 					pagesAccessed.push_back(currentNode->pageNoArray[i]);
 					bufMgr->readPage(file, currentNode->pageNoArray[i], newPage);
-					currentNode = (NonLeafNodeInt*)(newPage);
+					*currentNode = *(NonLeafNodeInt*)(newPage);
 				}
 				if(lowValInt >= currentNode->keyArray[i] && lowValInt < currentNode->keyArray[i+1]){
 					pagesAccessed.push_back(currentNode->pageNoArray[i]);
 					bufMgr->readPage(file, currentNode->pageNoArray[i+1], newPage);
-					currentNode = (NonLeafNodeInt*)(newPage);
+					*currentNode = *(NonLeafNodeInt*)(newPage);
 				}
 				if(lowValInt >= currentNode->keyArray[i] && i == sizeof(currentNode->keyArray) - 1){
 					pagesAccessed.push_back(currentNode->pageNoArray[i]);
 					bufMgr->readPage(file, currentNode->pageNoArray[sizeof(currentNode->pageNoArray)-1], newPage);
-					currentNode = (NonLeafNodeInt*)(newPage);
+					*currentNode = *(NonLeafNodeInt*)(newPage);
 				}
 			}
 		}
@@ -831,19 +831,19 @@ void BTreeIndex::startScan(const void* lowValParm,
 				leafPageNum = currentNode->pageNoArray[i];
 				pagesAccessed.push_back(currentNode->pageNoArray[i]);
 				bufMgr->readPage(file, currentNode->pageNoArray[i], newPage);
-				currentNode = (NonLeafNodeInt*)(newPage);
+				*currentNode = *(NonLeafNodeInt*)(newPage);
 			}
 			if(lowValInt > currentNode->keyArray[i] && lowValInt < currentNode->keyArray[i+1]){
 				leafPageNum = currentNode->pageNoArray[i];
 				pagesAccessed.push_back(currentNode->pageNoArray[i]);
 				bufMgr->readPage(file, currentNode->pageNoArray[i+1], newPage);
-				currentNode = (NonLeafNodeInt*)(newPage);
+				*currentNode = *(NonLeafNodeInt*)(newPage);
 			}
 			if(lowValInt > currentNode->keyArray[i] && i == sizeof(currentNode->keyArray) - 1){
 				leafPageNum = currentNode->pageNoArray[i];
 				pagesAccessed.push_back(currentNode->pageNoArray[i]);
 				bufMgr->readPage(file, currentNode->pageNoArray[sizeof(currentNode->pageNoArray)-1], newPage);
-				currentNode = (NonLeafNodeInt*)(newPage);
+				*currentNode = *(NonLeafNodeInt*)(newPage);
 			}
 		}
 	}
@@ -854,22 +854,76 @@ void BTreeIndex::startScan(const void* lowValParm,
 					leafPageNum = currentNode->pageNoArray[i];
 					pagesAccessed.push_back(currentNode->pageNoArray[i]);
 					bufMgr->readPage(file, currentNode->pageNoArray[i], newPage);
-					currentNode = (NonLeafNodeInt*)(newPage);
+					*currentNode = *(NonLeafNodeInt*)(newPage);
 			}
 			if(lowValInt >= currentNode->keyArray[i] && lowValInt < currentNode->keyArray[i+1]){
 				leafPageNum = currentNode->pageNoArray[i];
 				pagesAccessed.push_back(currentNode->pageNoArray[i]);
 				bufMgr->readPage(file, currentNode->pageNoArray[i+1], newPage);
-				currentNode = (NonLeafNodeInt*)(newPage);
+				*currentNode = *(NonLeafNodeInt*)(newPage);
 			}
 			if(lowValInt >= currentNode->keyArray[i] && i == sizeof(currentNode->keyArray) - 1){
 				leafPageNum = currentNode->pageNoArray[i];
 				pagesAccessed.push_back(currentNode->pageNoArray[i]);
 				bufMgr->readPage(file, currentNode->pageNoArray[sizeof(currentNode->pageNoArray)-1], newPage);
-				currentNode = (NonLeafNodeInt*)(newPage);
+				*currentNode = *(NonLeafNodeInt*)(newPage);
 			}
 		}
 	}
+    */
+    int leafPageNum = 0;
+    while(currentNode->level != 1){
+       if(lowOp == GT){
+           Page* newPage;
+           if(highOp == LT){
+               for(long unsigned int i = 0; i < sizeof(currentNode->keyArray); i++){
+                   if(currentNode -> keyArray[i] > lowValInt && currentNode -> keyArray[i] < highValInt){
+                       leafPageNum = currentNode->pageNoArray[i];
+                       pagesAccessed.push_back(currentNode->pageNoArray[i]);
+                       bufMgr->readPage(file, currentNode->pageNoArray[i], newPage);
+                       std::cout << currentNode << " with a new page of " << newPage << std::endl;
+                       currentNode = (NonLeafNodeInt*)(newPage);
+                   }
+               }
+           }
+           if(highOp == LTE){
+               for(long unsigned int i = 0; i < sizeof(currentNode->keyArray); i++){
+                   if(currentNode -> keyArray[i] > lowValInt && currentNode -> keyArray[i] <= highValInt){
+                       leafPageNum = currentNode->pageNoArray[i];
+                       pagesAccessed.push_back(currentNode->pageNoArray[i]);
+                       bufMgr->readPage(file, currentNode->pageNoArray[i], newPage);
+                       std::cout << currentNode << " with a new page of " << newPage << std::endl;
+                       currentNode = (NonLeafNodeInt*)(newPage);
+                   }
+               }
+           }
+       }
+       if(lowOp == GTE){
+           Page* newPage;
+           if(highOp == LT){
+               for(long unsigned int i = 0; i < sizeof(currentNode->keyArray); i++){
+                   if(currentNode -> keyArray[i] >= lowValInt && currentNode -> keyArray[i] < highValInt){
+                       leafPageNum = currentNode->pageNoArray[i];
+                       pagesAccessed.push_back(currentNode->pageNoArray[i]);
+                       bufMgr->readPage(file, currentNode->pageNoArray[i], newPage);
+                       std::cout << currentNode << " with a new page of " << newPage << std::endl;
+                       currentNode = (NonLeafNodeInt*)(newPage);
+                   }
+               }
+           }
+           if(highOp == LTE){
+               for(long unsigned int i = 0; i < sizeof(currentNode->keyArray); i++){
+                   if(currentNode -> keyArray[i] >= lowValInt && currentNode -> keyArray[i] <= highValInt){
+                       leafPageNum = currentNode->pageNoArray[i];
+                       pagesAccessed.push_back(currentNode->pageNoArray[i]);
+                       bufMgr->readPage(file, currentNode->pageNoArray[i], newPage);
+                       std::cout << currentNode << " with a new page of " << newPage << std::endl;
+                       currentNode = (NonLeafNodeInt*)(newPage);
+                   }
+               }
+           }
+       }
+   }
 	int index = -1;
 	for(long unsigned int i = 0; i < sizeof(currentNode->keyArray); i++){ //Making sure that the leaf contains a valid key
 		if(lowOp == GT){
@@ -905,6 +959,8 @@ void BTreeIndex::startScan(const void* lowValParm,
 	else{
 		throw NoSuchKeyFoundException();
 	}
+    
+
 
 
 
