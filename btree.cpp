@@ -362,7 +362,7 @@ BTreeIndex::~BTreeIndex()
         PageId parentId = searchPath[searchPath.size() - 1];
         // delete the parentId from the searchPath, to generate the search path for the parentId
         searchPath.erase(searchPath.begin() + searchPath.size() - 1);
-        this -> insertNonLeafNode(parentId, &pushup, newPageId, searchPath, true);
+        this -> insertInternalNode(parentId, &pushup, newPageId, searchPath, true);
     }
 }
 
@@ -396,7 +396,7 @@ BTreeIndex::~BTreeIndex()
     IndexMetaInfo * metaInfo = (IndexMetaInfo*) metaPage;
     metaInfo -> rootPageNo = rootId;
     
-    metaInfo -> rootIsLeaf = false
+    metaInfo -> rootIsLeaf = false;
     // unpin this meta page
     this -> bufMgr -> unPinPage(this -> file, this -> headerPageNum, true);
 }
@@ -449,7 +449,7 @@ BTreeIndex::~BTreeIndex()
     else{
   
         this -> bufMgr -> unPinPage(this -> file, pid, false);
-        this -> splitNonLeafNode(pid, key, leftPageId, searchPath, fromLeaf);
+        this -> splitInternalNode(pid, key, leftPageId, searchPath, fromLeaf);
     }
 }
 
@@ -628,7 +628,7 @@ BTreeIndex::~BTreeIndex()
         PageId parentId = searchPath[searchPath.size() - 1];
         // delete the parentId from the searchPath, to generate the search path for the parentId
         searchPath.erase(searchPath.begin() + searchPath.size() - 1);
-        this -> insertNonLeafNode(parentId, &pushup, newPageId, searchPath, false);
+        this -> insertInternalNode(parentId, &pushup, newPageId, searchPath, false);
     }
 }
 
@@ -720,7 +720,8 @@ void BTreeIndex::startScan(const void* lowValParm,
 		throw BadScanrangeException();
 	}
 	NonLeafNodeInt *currentNode = (NonLeafNodeInt*)(root);
-	if(rootIsLeaf){ //checking the root if it is a leaf
+    IndexMetaInfo * metaInfo = (IndexMetaInfo*)(root);
+	if(metaInfo->rootIsLeaf){ //checking the root if it is a leaf
 		LeafNodeInt *currentNodeIsLeaf = (LeafNodeInt*)(root);
 		if(lowOp == GT){
 			int index = -1;
@@ -780,7 +781,8 @@ void BTreeIndex::startScan(const void* lowValParm,
 		}
 	}
 	while(currentNode->level != 1){ //Going through the tree and finding the correct node that is one level above the leaf node and marking every node it passes through to unPin later
-		if(lowOp == GT){
+		std::cout << "Looped";
+        if(lowOp == GT){
 			Page* newPage = NULL;
 			for(long unsigned int i = 0; i < sizeof(currentNode->keyArray) - 1; i++){
 				if(lowValInt < currentNode->keyArray[i]){
