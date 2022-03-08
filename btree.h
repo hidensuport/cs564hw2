@@ -343,6 +343,8 @@ class BTreeIndex {
    void splitLeafNode(PageId pid, const void *key, const RecordId rid, std::vector<PageId>& searchPath);
   
    void formNewRoot(const void *key, const PageId leftPageId, const PageId rightPageId, int level);
+	
+   void findLeaf();
   
   /**
 	 * Insert a new entry using the pair <value,rid>. 
