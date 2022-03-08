@@ -135,10 +135,10 @@ BTreeIndex::BTreeIndex(const std::string & relationName,
 
 BTreeIndex::~BTreeIndex()
 {
-  scanExecuting = false;
-  bufMgr->flushFile(BTreeIndex::file);
-  delete file;
-    file = nullptr;
+this->bufMgr->flushFile(file);
+    delete this->file;
+    this->file = NULL;
+
 }
 
 
@@ -175,7 +175,7 @@ void BTreeIndex::formNewRoot(PageId firstPageInRoot, PageKeyPair<int> *newchildE
 
   metaPage->rootIsLeaf = false;
 
-  isRootLeaf = metaPage->rootIsLeaf;
+  if(isRootLeaf){isRootLeaf = false;}
 
 
   rootPageNum = newRootPageNum;
