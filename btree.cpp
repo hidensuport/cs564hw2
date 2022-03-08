@@ -15,7 +15,6 @@
 #include "exceptions/index_scan_completed_exception.h"
 #include "exceptions/file_not_found_exception.h"
 #include "exceptions/end_of_file_exception.h"
-#include "exceptions/page_not_pinned_exception.h"
 
 
 //#define DEBUG
