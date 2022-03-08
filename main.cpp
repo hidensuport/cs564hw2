@@ -62,7 +62,7 @@ BufMgr * bufMgr = new BufMgr(100);
 // -----------------------------------------------------------------------------
 // Forward declarations
 // -----------------------------------------------------------------------------
-
+void intTestOutOfBounds() ;
 void createRelationForward();
 void createRelationBackward();
 void createRelationRandom();
@@ -77,6 +77,9 @@ void indexTests();
 void test1();
 void test2();
 void test3();
+void test4();
+void test5();
+void test6();
 void errorTests();
 void deleteRelation();
 
@@ -142,6 +145,8 @@ int main(int argc, char **argv)
 	test1();
 	test2();
 	test3();
+	test4();
+	test6();
 	errorTests();
 
 	delete bufMgr;
@@ -189,6 +194,7 @@ void test4()
 	createZeroRelationForward();
 	intTestsEmpty();
 	deleteRelation();
+	std::cout << "\nTest 4 passed\n" << std::endl;
 }
 void test5()
 {
@@ -208,11 +214,12 @@ void test6()
 	createRelationForward();
 	intTestOutOfBounds();
 	deleteRelation();
+	std::cout << "\nTest 6 passed\n" << std::endl;
 }
-
 // -----------------------------------------------------------------------------
 // createRelationForward
 // -----------------------------------------------------------------------------
+
 void createZeroRelationForward()
 {
   std::vector<RecordId> ridVec;
@@ -450,8 +457,6 @@ void indexTests()
   }
 }
 
-  
-
 // -----------------------------------------------------------------------------
 // intTests
 // -----------------------------------------------------------------------------
@@ -470,8 +475,6 @@ void intTests()
 	checkPassFail(intScan(&index,300,GT,400,LT), 99)
 	checkPassFail(intScan(&index,3000,GTE,4000,LT), 1000)
 }
-
-// test for empty tree
 void intTestsEmpty()
 {
    std::cout << "Create a B+ Tree index on the integer field" << std::endl;
@@ -487,8 +490,6 @@ void intTestsEmpty()
 	checkPassFail(intScan(&index,3000,GTE,4000,LT), 0)
   
 }
-
-// test for negtive value
 void intTestsNegative()
 {
    std::cout << "Create a B+ Tree index on the integer field" << std::endl;
@@ -502,6 +503,20 @@ void intTestsNegative()
 	checkPassFail(intScan(&index,0,GT,1,LT), 0)
 	checkPassFail(intScan(&index,300,GT,400,LT), 99)
 	checkPassFail(intScan(&index,3000,GTE,4000,LT), 0)
+  
+}
+
+void indexOutOfBoundTests(){
+ 
+    intTestOutOfBounds();
+    try
+    {
+      std::cout << "try to remove: " << intIndexName << "\n";
+      File::remove(intIndexName);
+    }
+    catch (FileNotFoundException e)
+    {
+    }  
   
 }
 void intTestOutOfBounds() {
