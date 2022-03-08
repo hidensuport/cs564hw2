@@ -131,10 +131,8 @@ struct IndexMetaInfo{
    */
 	PageId rootPageNo;
 
-  /**
-  * Tells whether or not the root is a leaf node or not
-  */
   bool rootIsLeaf;
+
 };
 
 /*
@@ -298,6 +296,11 @@ class BTreeIndex {
    */
 	Operator	highOp;
 
+  /**
+   *  Tell if the root is a leaf or not 
+   */
+  bool rootIsLeaf;
+
 	std::vector<PageId> pagesAccessed{};
  public:
 
@@ -343,7 +346,7 @@ class BTreeIndex {
    void splitLeafNode(PageId pid, const void *key, const RecordId rid, std::vector<PageId>& searchPath);
   
    void formNewRoot(const void *key, const PageId leftPageId, const PageId rightPageId, int level);
-	
+
    void findLeaf();
   
   /**
