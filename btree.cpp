@@ -15,6 +15,7 @@
 #include "exceptions/index_scan_completed_exception.h"
 #include "exceptions/file_not_found_exception.h"
 #include "exceptions/end_of_file_exception.h"
+#include "exceptions/page_not_pinned_exception.h"
 
 
 //#define DEBUG
@@ -444,10 +445,10 @@ void BTreeIndex::findLeaf()//need to implement with new knowledge of how key arr
                     prevLevel = current->level;
                     bufMgr->unPinPage(this->file, prevPageNum, false);
                     current = (NonLeafNodeInt*)(currentPageData);
-                    
                     break;
                 }
                 if(current->keyArray[i] == 0 && i > 1 && lowValInt > current->keyArray[i]){
+                    bufMgr->unPinPage(this->file, currentPageNum, false);
                     throw NoSuchKeyFoundException();
                 }
             }
@@ -462,6 +463,7 @@ void BTreeIndex::findLeaf()//need to implement with new knowledge of how key arr
                     break;
                 }
                 if(current->keyArray[i] == 0 && i > 1 && lowValInt > current->keyArray[i]){
+                    bufMgr->unPinPage(this->file, currentPageNum, false);
                     throw NoSuchKeyFoundException();
                 }
             }
@@ -515,18 +517,8 @@ void BTreeIndex::startScan(const void* lowValParm,
       throw BadOpcodesException();
     }
   }
-  if(lowOp == LT){
-    if(lowOp == LTE){
-      throw BadOpcodesException();
-    }
-  }
   if(highOp != LT){
     if(highOp != LTE){
-      throw BadOpcodesException();
-    }
-  }
-  if(highOp == GT){
-    if(highOp == GTE){
       throw BadOpcodesException();
     }
   }
@@ -542,56 +534,7 @@ void BTreeIndex::startScan(const void* lowValParm,
   }
   scanExecuting = true; //Sets there to be a scan going
   Page* root = NULL;
-  bufMgr->readPage(this->file, this->rootPageNum, root); //Gets the root page from the rootPageNum
-  NonLeafNodeInt *currentNode = (NonLeafNodeInt*)(root);
-  if(false == true){ //checking the root if it is a leaf
-    LeafNodeInt *currentNodeIsLeaf = (LeafNodeInt*)(root);
-    for(int i = 0; i < sizeof(currentNodeIsLeaf->keyArray); i++){
-            if(lowOp == GTE){
-                if(highOp == LT){
-                    if(currentNodeIsLeaf->keyArray[i] >= lowValInt && currentNodeIsLeaf->keyArray[i] < highValInt){
-                        this->nextEntry = i;
-                        break;
-                    }
-                    else if(i == sizeof(currentNodeIsLeaf->keyArray)){
-                        throw NoSuchKeyFoundException();
-                    }
-                }
-                if(highOp == LTE){
-                    if(currentNodeIsLeaf->keyArray[i] >= lowValInt && currentNodeIsLeaf->keyArray[i] <= highValInt){
-                        this->nextEntry = i;
-                        break;
-                    }
-                    else if(i == sizeof(currentNodeIsLeaf->keyArray)){
-                        throw NoSuchKeyFoundException();
-                    }
-                }
-            }
-            if(lowOp == GT){
-                if(highOp == LT){
-                    if(currentNodeIsLeaf->keyArray[i] >= lowValInt && currentNodeIsLeaf->keyArray[i] < highValInt){
-                        this->nextEntry = i;
-                        break;
-                    }
-                    else if(i == sizeof(currentNodeIsLeaf->keyArray)){
-                        throw NoSuchKeyFoundException();
-                    }
-                }
-                if(highOp == LTE){
-                    if(currentNodeIsLeaf->keyArray[i] >= lowValInt && currentNodeIsLeaf->keyArray[i] <= highValInt){
-                        this->nextEntry = i;
-                        break;
-                    }
-                    else if(i == sizeof(currentNodeIsLeaf->keyArray)){
-                        throw NoSuchKeyFoundException();
-                    }
-                }
-            }
-        }
-        currentPageNum = rootPageNum;
-        bufMgr->readPage(this->file, rootPageNum, currentPageData);
-  }
-    findLeaf();
+  findLeaf();
   
 }
 
@@ -628,7 +571,7 @@ void BTreeIndex::scanNext(RecordId& outRid)
       throw IndexScanCompletedException();
     }
   }
-  if(nextEntry > 0 && currentPage->keyArray[nextEntry+1] == 0){ //the next entry is on the right sibling changing the global variables accordingly
+  if(nextEntry > 0 && (currentPage->keyArray[nextEntry+1] == 0 && currentPage->keyArray[nextEntry + 2] == 0)){ //the next entry is on the right sibling changing the global variables accordingly
     nextEntry = 0;
     int prevPageNum = currentPageNum;
     currentPageNum = currentPage->rightSibPageNo;
@@ -650,7 +593,6 @@ void BTreeIndex::endScan()
     return;
   }
   bufMgr->unPinPage(file, currentPageNum, true);
-  bufMgr->unPinPage(file, rootPageNum, true);
   scanExecuting = false;
 
 
