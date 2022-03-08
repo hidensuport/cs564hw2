@@ -679,8 +679,6 @@ void BTreeIndex::insertEntry(const void *key, const RecordId rid)
 
 
 
-
-
 void BTreeIndex::findLeaf()
 {
     bufMgr->readPage(this->file, this->rootPageNum, this->currentPageData);
@@ -791,8 +789,7 @@ void BTreeIndex::startScan(const void* lowValParm,
 	}
 	NonLeafNodeInt *currentNode = (NonLeafNodeInt*)(root);
     std::cout << currentNode->keyArray[0];
-    IndexMetaInfo * metaInfo = (IndexMetaInfo*)(root);
-	if(metaInfo->rootIsLeaf){ //checking the root if it is a leaf
+	if(rootIsLeaf){ //checking the root if it is a leaf
 		LeafNodeInt *currentNodeIsLeaf = (LeafNodeInt*)(root);
 		for(int i = 0; i < sizeof(currentNodeIsLeaf->keyArray); i++){
             if(lowOp == GTE){
@@ -900,3 +897,4 @@ void BTreeIndex::endScan()
 }
 
 }
+
