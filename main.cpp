@@ -64,6 +64,7 @@ BufMgr * bufMgr = new BufMgr(100);
 // -----------------------------------------------------------------------------
 void intTestOutOfBounds() ;
 void createRelationForward();
+void intTestsNonConsecutive();
 void createRelationBackward();
 void createRelationRandom();
 void createZeroRelationForward();
@@ -210,7 +211,7 @@ void test5()
 }
 void test6()
 {
-  // Test for have large value
+  // Test for non consecutive value of size 3ooo
   std::cout << "---------------------" << std::endl;
 	std::cout << "test for non consecutive value" << std::endl;
 	NonConsecutiveRelation();
@@ -528,7 +529,7 @@ void intTestsEmpty()
 	// run some tests
 	checkPassFail(intScan(&index,25,GT,40,LT), 0)
 	checkPassFail(intScan(&index,20,GTE,35,LTE), 0)
-	checkPassFail(intScan(&index,-3,GT,3,LT), 0)
+	checkPassFail(intScan(&index,0,GT,3,LT), 0)
 	checkPassFail(intScan(&index,996,GT,1001,LT), 0)
 	checkPassFail(intScan(&index,0,GT,1,LT), 0)
 	checkPassFail(intScan(&index,300,GT,400,LT), 0)
@@ -555,6 +556,21 @@ void intTestsNegative()
   BTreeIndex index(relationName, intIndexName, bufMgr, offsetof(tuple,i), INTEGER);
 
 	// run some tests
+	checkPassFail(intScan(&index,25,GT,40,LT), 14)
+	checkPassFail(intScan(&index,20,GTE,35,LTE), 16)
+	checkPassFail(intScan(&index,-3,GT,3,LT), 5)
+	checkPassFail(intScan(&index,-1000,GT,1000,LT), 1999)
+	checkPassFail(intScan(&index,0,GT,1,LT), 0)
+	checkPassFail(intScan(&index,300,GT,400,LT), 99)
+	checkPassFail(intScan(&index,3000,GTE,4000,LT), 0)
+  
+}
+void intTestsNonConsecutive()
+{
+   std::cout << "Create a B+ Tree index on the integer field" << std::endl;
+  BTreeIndex index(relationName, intIndexName, bufMgr, offsetof(tuple,i), INTEGER);
+
+	// run some tests
 	checkPassFail(intScan(&index,50,GT,80,LT), 14)
 	checkPassFail(intScan(&index,40,GTE,70,LTE), 16)
 	checkPassFail(intScan(&index,-6,GT,6,LT), 3)
@@ -565,25 +581,7 @@ void intTestsNegative()
   
 }
 
-void indexOutOfBoundTests(){
- 
-    intTestOutOfBounds();
-    try
-    {
-      std::cout << "try to remove: " << intIndexName << "\n";
-      File::remove(intIndexName);
-    }
-    catch (FileNotFoundException e)
-    {
-    }  
-  
-}
-void intTestOutOfBounds() {
-  std::cout << "Create a B+ Tree index on the integer field" << std::endl;
-  BTreeIndex index(relationName, intIndexName, bufMgr, offsetof(tuple, i), INTEGER);
 
-  checkPassFail(intScan(&index, -1000000, GT, 100000, LT), relationSize) 
-}
 
 int intScan(BTreeIndex * index, int lowVal, Operator lowOp, int highVal, Operator highOp)
 {
