@@ -70,6 +70,7 @@ void createZeroRelationForward();
 void createRelationForwardRange(int start, int end);
 void intTestsNegative();
 void intTests();
+void NonConsecutiveRelation();
 void intTestsEmpty();
 void intTestOutOfBounds() ;
 int intScan(BTreeIndex *index, int lowVal, Operator lowOp, int highVal, Operator highOp);
@@ -80,6 +81,7 @@ void test3();
 void test4();
 void test5();
 void test6();
+void intTestsNegative()
 void errorTests();
 void deleteRelation();
 
@@ -146,6 +148,7 @@ int main(int argc, char **argv)
 	test2();
 	test3();
 	test4();
+	test5();
 	test6();
 	errorTests();
 
@@ -198,27 +201,69 @@ void test4()
 }
 void test5()
 {
-  // Test for have negative value
+  // Test for have large value
   std::cout << "---------------------" << std::endl;
 	std::cout << "test for negative value" << std::endl;
-	createRelationForwardRange(-2000, 2000);
+	createRelationForwardRange(-4000, 2000);
 	intTestsNegative();
 	deleteRelation(); 
 }
-
 void test6()
 {
-  // Test for have negative value
+  // Test for have large value
   std::cout << "---------------------" << std::endl;
-	std::cout << "test for out of boound" << std::endl;
-	createRelationForward();
-	intTestOutOfBounds();
-	deleteRelation();
-	std::cout << "\nTest 6 passed\n" << std::endl;
+	std::cout << "test for non consecutive value" << std::endl;
+	NonConsecutiveRelation();
+	intTestsNonConsecutive();
+	deleteRelation(); 
 }
+
+
 // -----------------------------------------------------------------------------
 // createRelationForward
 // -----------------------------------------------------------------------------
+void NonConsecutiveRelation()
+{
+  std::vector<RecordId> ridVec;
+  // destroy any old copies of relation file
+  try
+  {
+    File::remove(relationName);
+  }
+  catch (FileNotFoundException e)
+  {
+  }
+
+  file1 = new PageFile(relationName, true);
+  // initialize all of record1.s to keep purify happy
+  memset(record1.s, ' ', sizeof(record1.s));
+  PageId new_page_number;
+  Page new_page = file1->allocatePage(new_page_number);
+
+  // Insert a bunch of tuples into the relation.
+  for (int i = 0; i < 3000; i++)
+  {
+    sprintf(record1.s, "%05d string record", 2*i);
+    record1.i = 2*i;
+    record1.d = 2.0*(double)i;
+    std::string new_data(reinterpret_cast<char *>(&record1), sizeof(record1));
+
+    while (1)
+    {
+      try
+      {
+        new_page.insertRecord(new_data);
+        break;
+      }
+      catch (InsufficientSpaceException e)
+      {
+        file1->writePage(new_page_number, new_page);
+        new_page = file1->allocatePage(new_page_number);
+      }
+    }
+  }
+  file1->writePage(new_page_number, new_page);
+}
 
 void createZeroRelationForward()
 {
@@ -490,12 +535,11 @@ void intTestsEmpty()
 	checkPassFail(intScan(&index,3000,GTE,4000,LT), 0)
   
 }
-void intTestsNegative()
+void createRelationForwardRange()
 {
-   std::cout << "Create a B+ Tree index on the integer field" << std::endl;
+   std::cout << "Create a B+ Tree index for non-consective" << std::endl;
   BTreeIndex index(relationName, intIndexName, bufMgr, offsetof(tuple,i), INTEGER);
 
-	// run some tests
 	checkPassFail(intScan(&index,25,GT,40,LT), 14)
 	checkPassFail(intScan(&index,20,GTE,35,LTE), 16)
 	checkPassFail(intScan(&index,-3,GT,3,LT), 5)
@@ -503,6 +547,21 @@ void intTestsNegative()
 	checkPassFail(intScan(&index,0,GT,1,LT), 0)
 	checkPassFail(intScan(&index,300,GT,400,LT), 99)
 	checkPassFail(intScan(&index,3000,GTE,4000,LT), 0)
+  
+}
+void intTestsNegative()
+{
+   std::cout << "Create a B+ Tree index on the integer field" << std::endl;
+  BTreeIndex index(relationName, intIndexName, bufMgr, offsetof(tuple,i), INTEGER);
+
+	// run some tests
+	checkPassFail(intScan(&index,50,GT,80,LT), 14)
+	checkPassFail(intScan(&index,40,GTE,70,LTE), 16)
+	checkPassFail(intScan(&index,-6,GT,6,LT), 3)
+	checkPassFail(intScan(&index,1992,GT,2002,LT), 4)
+	checkPassFail(intScan(&index,0,GT,2,LT), 0)
+	checkPassFail(intScan(&index,600,GT,800,LT), 99)
+	checkPassFail(intScan(&index,6000,GTE,8000,LT), 1000)
   
 }
 
