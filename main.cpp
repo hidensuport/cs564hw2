@@ -192,16 +192,18 @@ void test3()
 	indexTests();
 	deleteRelation();
 }
-void test4()
-{
-  // Test for empty tree
-    std::cout << "---------------------" << std::endl;
-	std::cout << "test for empty tree" << std::endl;
-	createZeroRelationForward();
-	intTestsEmpty();
-	deleteRelation();
-	std::cout << "\nTest 4 passed\n" << std::endl;
+void test4(){ 
+  // Create an index file and then read directly from the existing index file
+  // on attribute of type int
+  std::cout << "--------------------" << std::endl;
+  std::cout << "Test on existing index file" << std::endl;
+  createRelationBackward(); 
+  inttests();
+  indexTests();
+  deleteRelation();
+  std::cout << "\nTest 4 passed\n" << std::endl;
 }
+
 void test5()
 {
   // Test for have large value
@@ -212,22 +214,13 @@ void test5()
 	deleteRelation(); 
 	std::cout << "\nTest 5 passed\n" << std::endl;
 }
-void test6()
-{
-  // Test for non consecutive value of size 3ooo
-  std::cout << "---------------------" << std::endl;
-	std::cout << "test for non consecutive value" << std::endl;
-	NonConsecutiveRelation();
-	intTestsNonConsecutive();
-	deleteRelation(); 
-	std::cout << "\nTest 6 passed\n" << std::endl;
-}
+
 void test7()
 {
   // Test for only one leaf and it is the root
   std::cout << "---------------------" << std::endl;
 	std::cout << "extra test for only one left" << std::endl;
-	createRelationForwardRange(40, 20);
+	createRelationForwardRange(2, 40002);
 	intTestsOneLeaf();
 	deleteRelation();
 	std::cout << "\nTest 7 passed\n" << std::endl;
@@ -547,6 +540,13 @@ void intTestsEmpty()
 	checkPassFail(intScan(&index,0,GT,1,LT), 0)
 	checkPassFail(intScan(&index,300,GT,400,LT), 0)
 	checkPassFail(intScan(&index,3000,GTE,4000,LT), 0)
+	try
+	{
+		File::remove(intIndexName);
+	}
+  catch(const FileNotFoundException &e)
+  {
+  }
   
 }
 void createRelationForwardRange()
@@ -561,6 +561,13 @@ void createRelationForwardRange()
 	checkPassFail(intScan(&index,0,GT,1,LT), 0)
 	checkPassFail(intScan(&index,300,GT,400,LT), 99)
 	checkPassFail(intScan(&index,3000,GTE,4000,LT), 0)
+	try
+	{
+		File::remove(intIndexName);
+	}
+  catch(const FileNotFoundException &e)
+  {
+  }
   
 }
 void intTestsNegative()
@@ -576,6 +583,13 @@ void intTestsNegative()
 	checkPassFail(intScan(&index,0,GT,1,LT), 0)
 	checkPassFail(intScan(&index,300,GT,400,LT), 99)
 	checkPassFail(intScan(&index,3000,GTE,4000,LT), 0)
+	try
+	{
+		File::remove(intIndexName);
+	}
+  catch(const FileNotFoundException &e)
+  {
+  }
   
 }
 void intTestsNonConsecutive()
@@ -591,6 +605,13 @@ void intTestsNonConsecutive()
 	checkPassFail(intScan(&index,0,GT,2,LT), 0)
 	checkPassFail(intScan(&index,600,GT,800,LT), 99)
 	checkPassFail(intScan(&index,6000,GTE,8000,LT), 1000)
+	try
+	{
+		File::remove(intIndexName);
+	}
+  catch(const FileNotFoundException &e)
+  {
+  }
   
 }
 void intTestsOneLeaf()
@@ -601,11 +622,18 @@ void intTestsOneLeaf()
 	// run some tests
 	checkPassFail(intScan(&index,25,GT,40,LT), 14)
 	checkPassFail(intScan(&index,20,GTE,35,LTE), 16)
-	checkPassFail(intScan(&index,-3,GT,3,LT), 3)
-	checkPassFail(intScan(&index,996,GT,1001,LT), 0)
+	checkPassFail(intScan(&index,-3,GT,3,LT), 0)
+	checkPassFail(intScan(&index,996,GT,1001,LT), 2)
 	checkPassFail(intScan(&index,0,GT,1,LT), 0)
-	checkPassFail(intScan(&index,300,GT,400,LT), 0)
-	checkPassFail(intScan(&index,3000,GTE,4000,LT), 0)
+	checkPassFail(intScan(&index,30000,GT,40000,LT), 9900)
+	checkPassFail(intScan(&index,6000,GTE,8000,LT),2000)
+	try
+	{
+		File::remove(intIndexName);
+	}
+  catch(const FileNotFoundException &e)
+  {
+  }
   
 }
 
