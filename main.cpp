@@ -82,9 +82,8 @@ void test2();
 void test3();
 void test4();
 void test5();
-void test6();
 void test7();
-void intTestsNegative()
+void intTestsNegative();
 void errorTests();
 void deleteRelation();
 
@@ -150,9 +149,9 @@ int main(int argc, char **argv)
 	test1();
 	test2();
 	test3();
-	test4();
-	test5();
-	test6();
+	test7();
+  test4();
+
 	errorTests();
 
 	delete bufMgr;
@@ -198,7 +197,7 @@ void test4(){
   std::cout << "--------------------" << std::endl;
   std::cout << "Test on existing index file" << std::endl;
   createRelationBackward(); 
-  inttests();
+  intTests();
   indexTests();
   deleteRelation();
   std::cout << "\nTest 4 passed\n" << std::endl;
@@ -219,12 +218,13 @@ void test7()
 {
   // Test for only one leaf and it is the root
   std::cout << "---------------------" << std::endl;
-	std::cout << "extra test for only one left" << std::endl;
-	createRelationForwardRange(2, 40002);
-	intTestsOneLeaf();
+	std::cout << "extra test for nonsecutive" << std::endl;
+	NonConsecutiveRelation();
+	intTestsNonConsecutive;
 	deleteRelation();
 	std::cout << "\nTest 7 passed\n" << std::endl;
 }
+
 
 // -----------------------------------------------------------------------------
 // createRelationForward
@@ -583,7 +583,7 @@ void intTestsNegative()
 	checkPassFail(intScan(&index,0,GT,1,LT), 0)
 	checkPassFail(intScan(&index,300,GT,400,LT), 99)
 	checkPassFail(intScan(&index,3000,GTE,4000,LT), 0)
-	try
+  	try
 	{
 		File::remove(intIndexName);
 	}
