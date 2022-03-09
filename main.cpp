@@ -73,6 +73,7 @@ void intTestsNegative();
 void intTests();
 void NonConsecutiveRelation();
 void intTestsEmpty();
+void intTestsOneLeaf();
 void intTestOutOfBounds() ;
 int intScan(BTreeIndex *index, int lowVal, Operator lowOp, int highVal, Operator highOp);
 void indexTests();
@@ -82,6 +83,7 @@ void test3();
 void test4();
 void test5();
 void test6();
+void test7();
 void intTestsNegative()
 void errorTests();
 void deleteRelation();
@@ -208,6 +210,7 @@ void test5()
 	createRelationForwardRange(-4000, 2000);
 	intTestsNegative();
 	deleteRelation(); 
+	std::cout << "\nTest 5 passed\n" << std::endl;
 }
 void test6()
 {
@@ -217,8 +220,18 @@ void test6()
 	NonConsecutiveRelation();
 	intTestsNonConsecutive();
 	deleteRelation(); 
+	std::cout << "\nTest 6 passed\n" << std::endl;
 }
-
+void test7()
+{
+  // Test for only one leaf and it is the root
+  std::cout << "---------------------" << std::endl;
+	std::cout << "extra test for only one left" << std::endl;
+	createRelationForwardRange(40, 20);
+	intTestsOneLeaf();
+	deleteRelation();
+	std::cout << "\nTest 7 passed\n" << std::endl;
+}
 
 // -----------------------------------------------------------------------------
 // createRelationForward
@@ -580,7 +593,21 @@ void intTestsNonConsecutive()
 	checkPassFail(intScan(&index,6000,GTE,8000,LT), 1000)
   
 }
+void intTestsOneLeaf()
+{
+   std::cout << "Create a B+ Tree with only one node" << std::endl;
+  BTreeIndex index(relationName, intIndexName, bufMgr, offsetof(tuple,i), INTEGER);
 
+	// run some tests
+	checkPassFail(intScan(&index,25,GT,40,LT), 14)
+	checkPassFail(intScan(&index,20,GTE,35,LTE), 16)
+	checkPassFail(intScan(&index,-3,GT,3,LT), 3)
+	checkPassFail(intScan(&index,996,GT,1001,LT), 0)
+	checkPassFail(intScan(&index,0,GT,1,LT), 0)
+	checkPassFail(intScan(&index,300,GT,400,LT), 0)
+	checkPassFail(intScan(&index,3000,GTE,4000,LT), 0)
+  
+}
 
 
 int intScan(BTreeIndex * index, int lowVal, Operator lowOp, int highVal, Operator highOp)
