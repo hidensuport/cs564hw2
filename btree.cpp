@@ -65,7 +65,6 @@ BTreeIndex::BTreeIndex(const std::string & relationName,
 
     bufMgr->unPinPage(file, headerPageNum, false);    
   }
-  
 
  
   catch(FileNotFoundException e)
@@ -135,7 +134,11 @@ BTreeIndex::BTreeIndex(const std::string & relationName,
 
 BTreeIndex::~BTreeIndex()
 {
-this->bufMgr->flushFile(file);
+      if(this->scanExecuting){
+        endScan(); // cleanup if there is any initialized scan
+    }
+
+    this->bufMgr->flushFile(file);
     delete this->file;
     this->file = NULL;
 
