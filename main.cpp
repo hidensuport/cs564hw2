@@ -216,7 +216,7 @@ void test5()
 
 void test7()
 {
-  // Test for only one leaf and it is the root
+  // Test for  for nonsecutive number
   std::cout << "---------------------" << std::endl;
 	std::cout << "extra test for nonsecutive" << std::endl;
 	NonConsecutiveRelation();
@@ -251,6 +251,7 @@ void NonConsecutiveRelation()
   for (int i = 0; i < 3000; i++)
   {
     sprintf(record1.s, "%05d string record", 2*i);
+	//multiple record with 2 to create nonconsectuive one
     record1.i = 2*i;
     record1.d = 2.0*(double)i;
     std::string new_data(reinterpret_cast<char *>(&record1), sizeof(record1));
@@ -272,25 +273,7 @@ void NonConsecutiveRelation()
   file1->writePage(new_page_number, new_page);
 }
 
-void createZeroRelationForward()
-{
-  std::vector<RecordId> ridVec;
-  // destroy any old copies of relation file
-  try
-  {
-    File::remove(relationName);
-  }
-  catch (FileNotFoundException e)
-  {
-  }
-  file1 = new PageFile(relationName, true);
 
-  // initialize all of record1.s to keep purify happy
-  memset(record1.s, ' ', sizeof(record1.s));
-  PageId new_page_number;
-  Page new_page = file1->allocatePage(new_page_number);
-  file1->writePage(new_page_number, new_page);
-}
 void createRelationForward()
 {
 	std::vector<RecordId> ridVec;
